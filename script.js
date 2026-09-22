@@ -1,52 +1,45 @@
-import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+﻿import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-/* ─── Supabase config ───────────────────────────────────────────────────────
-   Publishable key jest publiczny i ma tu być — tak samo jak wcześniej klucz
-   Firebase. Chroni nas RLS, nie schowanie klucza.
-   Schemat i dane: migration/schema.sql + migration/seed.sql                  */
 const SUPABASE_URL = "https://qmqbjtbairhtsmsbmrai.supabase.co";
 const SUPABASE_KEY = "sb_publishable_0BkzimGiTmwPKQELgb8TWQ_Ye48J2Uo";
 
-/* createClient rzuca wyjątkiem na niewypełnionym URL-u, co zabiłoby cały moduł
-   i strona nie pokazałaby nawet komunikatu — dlatego dopiero po sprawdzeniu. */
-const SKONFIGUROWANE = SUPABASE_URL.startsWith("https://");
-const supabase = SKONFIGUROWANE ? createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* ─── DOM refs ─── */
+const KATEGORIE = {
+    gra:     { label: "Gra",     ikona: "i-gamepad", tabela: "items",    db: "Gra",
+               placeholder: "Tytuł gry...",              przycisk: "Dodaj grę" },
+    film:    { label: "Film",    ikona: "i-film",    tabela: "items",    db: "Do obejrzenia",
+               placeholder: "Tytuł filmu albo serialu...", przycisk: "Dodaj film" },
+    cosplay: { label: "Cosplay", ikona: "i-shirt",   tabela: "cosplays",
+               placeholder: "Jaka postać?",               przycisk: "Dodaj cosplay" },
+    todo:    { label: "To-Do",   ikona: "i-todo",    tabela: "items",    db: "To-Do",
+               placeholder: "Co trzeba zrobić?",          przycisk: "Dodaj zadanie" },
+};
+
+const Z_BAZY = { "Gra": "gra", "Do obejrzenia": "film", "Cosplay": "cosplay", "To-Do": "todo" };
+
+const OSOBY = {
+    BK: { imie: "Bartek",   dopelniacz: "Bartka",   ikona: "i-gamepad" },
+    WW: { imie: "Wiktoria", dopelniacz: "Wiktorii", ikona: "i-flower"  },
+};
+const drugaOsoba = (osoba) => (osoba === "BK" ? "WW" : "BK");
+
+let wpisy = [];
+let aktywnyFiltr = localStorage.getItem("filtr") || "wszystko";
+let nowyId = null;
+let nrWczytania = 0;
+
+if (aktywnyFiltr !== "wszystko" && !KATEGORIE[aktywnyFiltr]) aktywnyFiltr = "wszystko";
+
 const modalEl      = document.getElementById("modal");
 const modalOverlay = document.getElementById("modalOverlay");
 const navButtons   = document.getElementById("navButtons");
-const btnGry       = document.getElementById("btnGry");
-const btnCospy     = document.getElementById("btnCospy");
 const logoutBtn    = document.getElementById("logoutBtn");
-const zakladkaGry  = document.getElementById("zakladkaGry");
-const zakladkaCospy= document.getElementById("zakladkaCospy");
+const addForm      = document.getElementById("addForm");
+const addBtn       = document.getElementById("addBtn");
+const nazwaInput   = document.getElementById("nazwaInput");
+const dlaKogoEl    = document.getElementById("dlaKogo");
 
-/* Gdzie ląduje lista której osoby. */
-const LISTY_ITEMS = { BK: "itemsBK", WW: "itemsWW" };
-const LISTY_COSPY = { BK: "itemsBKCosplay", WW: "itemsWWCosplay" };
-
-/* ─── Tab switching ─── */
-function zmienzakladke(zakladka) {
-    if (zakladka === "gry") {
-        zakladkaGry.style.display  = "flex";
-        zakladkaCospy.style.display = "none";
-        btnGry.classList.add("active");
-        btnCospy.classList.remove("active");
-    } else {
-        zakladkaGry.style.display  = "none";
-        zakladkaCospy.style.display = "flex";
-        btnCospy.classList.add("active");
-        btnGry.classList.remove("active");
-    }
-}
-
-btnGry.addEventListener("click",   () => zmienzakladke("gry"));
-btnCospy.addEventListener("click", () => zmienzakladke("cospy"));
-
-/* ─── Ikona ze sprite'a w index.html ────────────────────────────────────────
-   SVG wymaga createElementNS — zwykłe createElement zrobiłoby element HTML
-   o tej nazwie, który by się nie wyrenderował.                             */
 const SVG_NS = "http://www.w3.org/2000/svg";
 
 function ikona(id) {
@@ -61,173 +54,215 @@ function ikona(id) {
     return svg;
 }
 
-/* ─── Render: jeden wiersz listy ───────────────────────────────────────────
-   Nazwy wpisują ludzie, więc lecą przez textContent, nie innerHTML.        */
-function zbudujWiersz(nazwa, opis, onDelete) {
-    const el = document.createElement("div");
-    el.classList.add("item");
-
-    const txt = document.createElement("p");
-
-    const strong = document.createElement("strong");
-    strong.textContent = nazwa;
-    txt.appendChild(strong);
-
-    if (opis) {
-        const em = document.createElement("em");
-        em.textContent = opis;
-        txt.appendChild(em);
-    }
-
-    const btn = document.createElement("button");
-    btn.type = "button";
-    btn.setAttribute("aria-label", `Usuń ${nazwa}`);
-    btn.appendChild(ikona("i-x"));
-    btn.onclick = onDelete;
-    txt.appendChild(btn);
-
-    el.appendChild(txt);
-    return el;
+function el(tag, klasa, tekst) {
+    const e = document.createElement(tag);
+    if (klasa) e.className = klasa;
+    if (tekst !== undefined) e.textContent = tekst;
+    return e;
 }
 
-/* ─── Items: wczytaj i wyrenderuj ─── */
-async function odswiezListe(osoba) {
-    const container = document.getElementById(LISTY_ITEMS[osoba]);
-
-    const { data, error } = await supabase
-        .from("items")
-        .select("id, nazwa, kategoria")
-        .eq("osoba", osoba)
-        .order("created_at", { ascending: true });
-
-    if (error) { console.error("Błąd wczytywania listy:", error); return; }
-
-    container.innerHTML = "";
-    for (const { id, nazwa, kategoria } of data) {
-        container.appendChild(
-            zbudujWiersz(nazwa, kategoria, () => usunItem(osoba, id))
-        );
-    }
+function zItems(r) {
+    return { id: r.id, tabela: "items", osoba: r.osoba, nazwa: r.nazwa,
+             kat: Z_BAZY[r.kategoria], prosbaOd: null, created: r.created_at };
 }
 
-/* ─── Items: add ─── */
-async function dodajDoBazy(osoba, inputId, radioName) {
-    const input   = document.getElementById(inputId);
-    const coDodac = input.value.trim();
-    if (!coDodac) { alert("A może coś wpiszesz?"); return; }
+function zCosplays(r) {
+    return { id: r.id, tabela: "cosplays", osoba: r.osoba, nazwa: r.nazwa,
+             kat: "cosplay", prosbaOd: r.typ === "prośba" ? r.od_kogo : null,
+             created: r.created_at };
+}
 
-    const checkedRadio = document.querySelector(`input[name="${radioName}"]:checked`);
-    if (!checkedRadio) { alert("A te przyciski po coś tu są"); return; }
+async function wczytaj() {
+    const nr = ++nrWczytania;
 
-    const { error } = await supabase
-        .from("items")
-        .insert({ osoba, nazwa: coDodac, kategoria: checkedRadio.value });
+    const [items, cosplays] = await Promise.all([
+        supabase.from("items").select("id, osoba, nazwa, kategoria, created_at"),
+        supabase.from("cosplays").select("id, osoba, nazwa, typ, od_kogo, created_at"),
+    ]);
 
-    if (error) {
-        console.error(error);
-        alert("O chuj, nie działa");
+    if (nr !== nrWczytania) return;
+
+    if (items.error || cosplays.error) {
+        console.error("Błąd wczytywania:", items.error || cosplays.error);
+        for (const osoba of Object.keys(OSOBY)) {
+            document.getElementById(`lista${osoba}`)
+                .replaceChildren(el("p", "blad", "Nie udało się wczytać listy :("));
+        }
         return;
     }
 
-    input.value = "";
-    odswiezListe(osoba);
+    wpisy = [...items.data.map(zItems), ...cosplays.data.map(zCosplays)]
+        .filter(w => w.kat)
+        .sort((a, b) => new Date(a.created) - new Date(b.created));
+
+    render();
 }
 
-/* ─── Items: delete ─── */
-async function usunItem(osoba, id) {
-    const { error } = await supabase.from("items").delete().eq("id", id);
-    if (error) { console.error(error); alert("Nie udało się usunąć"); return; }
-    odswiezListe(osoba);
-}
+function zbudujWiersz(w) {
+    const kat = KATEGORIE[w.kat];
 
-/* ─── Cosplay: wczytaj i wyrenderuj ─── */
-async function odswiezCosplay(osoba) {
-    const container = document.getElementById(LISTY_COSPY[osoba]);
+    const wiersz = el("div", "item");
+    wiersz.dataset.kat = w.kat;
+    if (w.id === nowyId) wiersz.classList.add("nowy");
 
-    const { data, error } = await supabase
-        .from("cosplays")
-        .select("id, nazwa, typ, od_kogo")
-        .eq("osoba", osoba)
-        .order("created_at", { ascending: true });
+    const ico = el("span", "item-ico");
+    ico.title = kat.label;
+    ico.appendChild(ikona(kat.ikona));
 
-    if (error) { console.error("Błąd wczytywania cosplayów:", error); return; }
+    const body = el("div", "item-body");
+    body.appendChild(el("strong", "item-nazwa", w.nazwa));
 
-    container.innerHTML = "";
-    for (const { id, nazwa, typ, od_kogo } of data) {
-        const opis = typ === "prośba" ? `(Prośba od ${od_kogo})` : "";
-        container.appendChild(
-            zbudujWiersz(nazwa, opis, () => usunCosplay(osoba, id))
-        );
+    const meta = el("div", "item-meta");
+    if (aktywnyFiltr === "wszystko") meta.appendChild(el("span", "tag", kat.label));
+    if (w.prosbaOd) {
+        meta.appendChild(el("span", "tag tag-prosba", `prośba od ${OSOBY[w.prosbaOd].dopelniacz}`));
     }
+    body.appendChild(meta);
+
+    const del = el("button", "item-del");
+    del.type = "button";
+    del.setAttribute("aria-label", `Usuń ${w.nazwa}`);
+    del.appendChild(ikona("i-x"));
+    del.onclick = () => usun(w);
+
+    wiersz.append(ico, body, del);
+    return wiersz;
 }
 
-/* ─── Cosplay: add ─── */
-async function dodajCosplay() {
-    const input   = document.getElementById("inputCosplay");
-    const coDodac = input.value.trim();
-    if (!coDodac) { alert("A nazwa cosplayu gdzie?"); return; }
+function render() {
+    const liczniki = { wszystko: wpisy.length, gra: 0, film: 0, cosplay: 0, todo: 0 };
+    for (const w of wpisy) liczniki[w.kat]++;
 
-    const dlaKogoRadio = document.querySelector('input[name="ktoCosplay"]:checked').value;
-    const ja = localStorage.getItem("wybranaOsoba");
+    document.querySelectorAll("[data-licznik]").forEach(e => {
+        e.textContent = liczniki[e.dataset.licznik];
+    });
 
-    /* Prośba ląduje na liście drugiej osoby, własne u siebie. */
-    let docelowaOsoba = ja;
-    let typWpisu = "własne";
-    if (dlaKogoRadio === "prosba") {
-        docelowaOsoba = (ja === "BK") ? "WW" : "BK";
-        typWpisu = "prośba";
+    document.querySelectorAll(".filtr").forEach(b => {
+        const on = b.dataset.filtr === aktywnyFiltr;
+        b.classList.toggle("active", on);
+        b.setAttribute("aria-pressed", String(on));
+    });
+
+    for (const osoba of Object.keys(OSOBY)) {
+        const lista = wpisy.filter(w =>
+            w.osoba === osoba && (aktywnyFiltr === "wszystko" || w.kat === aktywnyFiltr));
+
+        document.getElementById(`lista${osoba}`).replaceChildren(...lista.map(zbudujWiersz));
+        document.getElementById(`licznik${osoba}`).textContent = lista.length;
     }
 
-    const { error } = await supabase
-        .from("cosplays")
-        .insert({ osoba: docelowaOsoba, nazwa: coDodac, typ: typWpisu, od_kogo: ja });
+    nowyId = null;
+}
+
+function ustawFiltr(filtr) {
+    aktywnyFiltr = filtr;
+    localStorage.setItem("filtr", filtr);
+    render();
+}
+
+document.querySelectorAll(".filtr").forEach(b => {
+    b.addEventListener("click", () => ustawFiltr(b.dataset.filtr));
+});
+
+function wybranaKategoria() {
+    return document.querySelector('input[name="kategoria"]:checked').value;
+}
+
+function odswiezFormularz() {
+    const kat = KATEGORIE[wybranaKategoria()];
+    nazwaInput.placeholder = kat.placeholder;
+    document.getElementById("addBtnLabel").textContent = kat.przycisk;
+    dlaKogoEl.hidden = kat.tabela !== "cosplays";
+}
+
+document.querySelectorAll('input[name="kategoria"]').forEach(r => {
+    r.addEventListener("change", () => {
+        localStorage.setItem("kategoria", r.value);
+        odswiezFormularz();
+        nazwaInput.focus();
+    });
+});
+
+async function dodaj(e) {
+    e.preventDefault();
+
+    const nazwa = nazwaInput.value.trim();
+    if (!nazwa) { alert("A może coś wpiszesz?"); nazwaInput.focus(); return; }
+
+    const ja  = localStorage.getItem("wybranaOsoba");
+    if (!OSOBY[ja]) { alert("Nuh uh, coś poszło nie tak."); return; }
+
+    const kat = wybranaKategoria();
+    let zapytanie;
+
+    if (kat === "cosplay") {
+        const prosba = document.querySelector('input[name="dlaKogo"]:checked').value === "prosba";
+        zapytanie = supabase.from("cosplays").insert({
+            osoba: prosba ? drugaOsoba(ja) : ja,
+            nazwa,
+            typ: prosba ? "prośba" : "własne",
+            od_kogo: ja,
+        });
+    } else {
+        zapytanie = supabase.from("items").insert({ osoba: ja, nazwa, kategoria: KATEGORIE[kat].db });
+    }
+
+    addBtn.disabled = true;
+    const { data, error } = await zapytanie.select("id").single();
+    addBtn.disabled = false;
 
     if (error) {
-        console.error("Błąd zapisu cosplayu:", error);
-        alert("O chuj, cosplay nie przeszedł!");
+        console.error("Błąd zapisu:", error);
+        alert(kat === "cosplay" ? "O chuj, cosplay nie przeszedł!" : "O chuj, nie działa");
         return;
     }
 
-    input.value = "";
-    odswiezCosplay(docelowaOsoba);
+    nazwaInput.value = "";
+    nazwaInput.focus();
+    nowyId = data.id;
+
+    if (aktywnyFiltr !== "wszystko" && aktywnyFiltr !== kat) {
+        aktywnyFiltr = kat;
+        localStorage.setItem("filtr", kat);
+    }
+
+    await wczytaj();
 }
 
-/* ─── Cosplay: delete ─── */
-async function usunCosplay(osoba, id) {
-    const { error } = await supabase.from("cosplays").delete().eq("id", id);
+addForm.addEventListener("submit", dodaj);
+
+async function usun(w) {
+    const { error } = await supabase.from(w.tabela).delete().eq("id", w.id);
     if (error) { console.error(error); alert("Nie udało się usunąć"); return; }
-    odswiezCosplay(osoba);
+
+    wpisy = wpisy.filter(x => x !== w);
+    render();
 }
 
-/* ─── Realtime ──────────────────────────────────────────────────────────────
-   Zamiennik firestore'owego onSnapshot: jak druga osoba coś doda albo usunie,
-   lista odświeża się sama. Wymaga tabel w publikacji supabase_realtime
-   (robi to schema.sql).                                                     */
 function wlaczRealtime() {
     supabase
         .channel("checklist")
-        .on("postgres_changes", { event: "*", schema: "public", table: "items" },
-            () => { odswiezListe("BK"); odswiezListe("WW"); })
-        .on("postgres_changes", { event: "*", schema: "public", table: "cosplays" },
-            () => { odswiezCosplay("BK"); odswiezCosplay("WW"); })
+        .on("postgres_changes", { event: "*", schema: "public", table: "items" },    wczytaj)
+        .on("postgres_changes", { event: "*", schema: "public", table: "cosplays" }, wczytaj)
         .subscribe();
 }
 
-/* ─── Show app ─── */
 function showApp() {
+    const ja = localStorage.getItem("wybranaOsoba");
+    const druga = drugaOsoba(ja);
+
     modalEl.classList.remove("visible");
     modalOverlay.classList.remove("visible");
-    navButtons.style.display = "flex";
+    navButtons.hidden = false;
 
-    odswiezListe("BK");
-    odswiezListe("WW");
-    odswiezCosplay("BK");
-    odswiezCosplay("WW");
+    document.getElementById("userChipName").textContent = OSOBY[ja].imie;
+    document.getElementById("userChipIco").setAttribute("href", `#${OSOBY[ja].ikona}`);
+    document.getElementById("prosbaLabel").textContent = `Prośba do ${OSOBY[druga].dopelniacz}`;
+
+    wczytaj();
     wlaczRealtime();
-    zmienzakladke("gry");
 }
 
-/* ─── Login ─── */
 function handleLogin() {
     const wpisaneHaslo = document.getElementById("hasloInput").value.trim();
     let wybranaOsoba = null;
@@ -242,37 +277,23 @@ function handleLogin() {
     showApp();
 }
 
-/* ─── Logout ─── */
 function handleLogout() {
     localStorage.removeItem("wybranaOsoba");
     localStorage.removeItem("hasloOK");
     location.reload();
 }
 
-/* ─── Brak konfiguracji ─────────────────────────────────────────────────────
-   Bez kluczy nic nie zadziała, więc mówimy to wprost i nie podłączamy
-   przycisków — każdy klik i tak poleciałby na nieistniejącym kliencie.      */
-function pokazBrakKonfiguracji() {
-    modalEl.classList.add("visible");
-    modalOverlay.classList.add("visible");
-
-    const info = document.createElement("p");
-    info.className = "modal-subtitle";
-    info.textContent = "Brak konfiguracji Supabase — wklej PROJECT URL i ANON KEY " +
-                       "na górze script.js (instrukcja: migration/README.md).";
-    modalEl.appendChild(info);
-
-    document.getElementById("modalBtn").disabled = true;
-}
-
-/* ─── Init ─── */
 document.addEventListener("DOMContentLoaded", () => {
-    if (!SKONFIGUROWANE) { pokazBrakKonfiguracji(); return; }
+    const zapamietana = localStorage.getItem("kategoria");
+    const radio = KATEGORIE[zapamietana] &&
+        document.querySelector(`input[name="kategoria"][value="${zapamietana}"]`);
+    if (radio) radio.checked = true;
+    odswiezFormularz();
 
     const user    = localStorage.getItem("wybranaOsoba");
     const hasloOK = localStorage.getItem("hasloOK");
 
-    if (user && hasloOK === "true") {
+    if (OSOBY[user] && hasloOK === "true") {
         showApp();
     } else {
         modalEl.classList.add("visible");
@@ -284,11 +305,4 @@ document.addEventListener("DOMContentLoaded", () => {
         if (e.key === "Enter") handleLogin();
     });
     logoutBtn.addEventListener("click", handleLogout);
-    document.getElementById("addCosplayBtn").addEventListener("click", dodajCosplay);
-
-    document.getElementById("addWWBtn").addEventListener("click", () => {
-        const docelowaOsoba = localStorage.getItem("wybranaOsoba");
-        if (!docelowaOsoba) { alert("Nuh uh, coś poszło nie tak."); return; }
-        dodajDoBazy(docelowaOsoba, "inputWW", "wyborWW");
-    });
 });

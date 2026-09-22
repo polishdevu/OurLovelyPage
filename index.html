@@ -3,16 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#ffe6f0">
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/png" href="https://img.icons8.com/color/512/hello-kitty.png">
     <title>Nasza lista owo</title>
 </head>
 <body>
 
-<!-- IKONY — sprite w stylu Lucide. Rysowane obrysem, więc biorą kolor
-     z currentColor i skalują się razem z tekstem. Użycie:
-     <svg class="ico"><use href="#i-gamepad"/></svg> -->
 <svg class="ikony-sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-bow" viewBox="0 0 24 24">
+        <path fill="currentColor" stroke="none" d="M11 9.6C8.6 3.8 1.2 3.6 1.2 10.4c0 6.8 7.4 7.6 9.8 3.6z"/>
+        <path fill="currentColor" stroke="none" d="M13 9.6c2.4-5.8 9.8-6 9.8.8 0 6.8-7.4 7.6-9.8 3.6z"/>
+        <circle fill="currentColor" stroke="#fff" stroke-width="1.4" cx="12" cy="11.8" r="3.4"/>
+    </symbol>
     <symbol id="i-gamepad" viewBox="0 0 24 24">
         <line x1="6" x2="10" y1="11" y2="11"/>
         <line x1="8" x2="8" y1="9" y2="13"/>
@@ -40,6 +43,12 @@
         <path d="M13 12h8"/>
         <path d="M13 18h8"/>
     </symbol>
+    <symbol id="i-all" viewBox="0 0 24 24">
+        <rect width="7" height="7" x="3" y="3" rx="2"/>
+        <rect width="7" height="7" x="14" y="3" rx="2"/>
+        <rect width="7" height="7" x="14" y="14" rx="2"/>
+        <rect width="7" height="7" x="3" y="14" rx="2"/>
+    </symbol>
     <symbol id="i-flower" viewBox="0 0 24 24">
         <circle cx="12" cy="6.5" r="3.2"/>
         <circle cx="17.5" cy="12" r="3.2"/>
@@ -61,122 +70,173 @@
         <path d="m22 2-7 20-4-9-9-4Z"/>
         <path d="M22 2 11 13"/>
     </symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24">
+        <path d="M5 12h14"/>
+        <path d="M12 5v14"/>
+    </symbol>
+    <symbol id="i-logout" viewBox="0 0 24 24">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" x2="9" y1="12" y2="12"/>
+    </symbol>
     <symbol id="i-x" viewBox="0 0 24 24">
         <path d="M18 6 6 18"/>
         <path d="m6 6 12 12"/>
     </symbol>
 </svg>
 
-<!-- LOGIN MODAL -->
 <div id="modalOverlay"></div>
-<div id="modal">
-    <img class="modal-logo" src="https://www.clipartmax.com/png/full/126-1261994_hello-kitty-png-icon-hello-kitty-png-icons.png" alt="Logo">
-    <h2 class="modal-title">Nasza checklista OwO</h2>
-    <p class="modal-subtitle">Kto to ty?</p>
+<div id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <svg class="ico kokarda modal-kokarda" aria-hidden="true"><use href="#i-bow"/></svg>
+    <img class="modal-logo" src="https://www.clipartmax.com/png/full/126-1261994_hello-kitty-png-icon-hello-kitty-png-icons.png" alt="">
+    <h2 class="modal-title" id="modalTitle">Nasza checklista OwO</h2>
+    <p class="modal-subtitle">Kto się loguje?</p>
     <div class="wybor">
         <label class="wybor-label">
             <input type="radio" name="osoba" value="BK">
             <span class="wybor-card">
-                <svg class="ico wybor-ico"><use href="#i-gamepad"/></svg>
+                <svg class="ico wybor-ico" aria-hidden="true"><use href="#i-gamepad"/></svg>
                 <span>Bartek</span>
             </span>
         </label>
         <label class="wybor-label">
             <input type="radio" name="osoba" value="WW">
             <span class="wybor-card">
-                <svg class="ico wybor-ico"><use href="#i-flower"/></svg>
+                <svg class="ico wybor-ico" aria-hidden="true"><use href="#i-flower"/></svg>
                 <span>Wiktoria</span>
             </span>
         </label>
     </div>
-    <input type="password" id="hasloInput" placeholder="Hasło...">
-    <button id="modalBtn">Wejdź <svg class="ico"><use href="#i-sparkles"/></svg></button>
+    <input type="password" id="hasloInput" placeholder="Hasło..." aria-label="Hasło">
+    <button id="modalBtn" class="btn-primary" type="button">
+        Wejdź <svg class="ico" aria-hidden="true"><use href="#i-sparkles"/></svg>
+    </button>
 </div>
 
-<!-- NAVBAR -->
-<nav class="navbar" id="navbar">
-    <img class="navbar-logo" src="https://www.clipartmax.com/png/full/126-1261994_hello-kitty-png-icon-hello-kitty-png-icons.png" alt="Logo">
-    <h1 class="navbar-title">Nasza lista OwO</h1>
-    <div id="navButtons" class="nav-actions" style="display:none;">
-        <button id="btnGry" class="tab-btn active"><svg class="ico"><use href="#i-gamepad"/></svg>Gry/Filmy</button>
-        <button id="btnCospy" class="tab-btn"><svg class="ico"><use href="#i-shirt"/></svg>Cospy</button>
-        <button id="logoutBtn" class="logout-btn">Wyloguj</button>
+<header class="navbar" id="navbar">
+    <img class="navbar-logo" src="https://www.clipartmax.com/png/full/126-1261994_hello-kitty-png-icon-hello-kitty-png-icons.png" alt="">
+    <h1 class="navbar-title">
+        Nasza lista
+        <span class="navbar-owo">OwO</span>
+        <svg class="ico kokarda navbar-kokarda" aria-hidden="true"><use href="#i-bow"/></svg>
+    </h1>
+    <div id="navButtons" class="nav-actions" hidden>
+        <span class="user-chip">
+            <span class="user-chip-ico">
+                <svg class="ico" aria-hidden="true"><use id="userChipIco" href="#i-gamepad"/></svg>
+            </span>
+            <span id="userChipName"></span>
+        </span>
+        <button id="logoutBtn" class="logout-btn" type="button" aria-label="Wyloguj">
+            <svg class="ico" aria-hidden="true"><use href="#i-logout"/></svg>
+            <span class="logout-txt">Wyloguj</span>
+        </button>
     </div>
-</nav>
+</header>
 
-<!-- MAIN CONTENT -->
 <main class="main-content">
 
-    <!-- TAB: GRY/FILMY -->
-    <div id="zakladkaGry" class="tab-content">
+    <section class="card add-card" aria-labelledby="addTitle">
+        <h2 class="card-title" id="addTitle">
+            <svg class="ico kokarda" aria-hidden="true"><use href="#i-bow"/></svg>
+            Co dodajemy?
+        </h2>
 
-        <div class="add-panel panel">
-            <p class="panel-label">Dodaj coś nowego</p>
-            <input type="text" id="inputWW" placeholder="Tytuł, postać, zadanie...">
-            <div class="radio-group">
-                <label class="radio-pill">
-                    <input type="radio" name="wyborWW" value="Gra" checked>
-                    <span><svg class="ico"><use href="#i-gamepad"/></svg>Gra</span>
-                </label>
-                <label class="radio-pill">
-                    <input type="radio" name="wyborWW" value="Do obejrzenia">
-                    <span><svg class="ico"><use href="#i-film"/></svg>Do obejrzenia</span>
-                </label>
-                <label class="radio-pill">
-                    <input type="radio" name="wyborWW" value="Cosplay">
-                    <span><svg class="ico"><use href="#i-shirt"/></svg>Cosplay</span>
-                </label>
-                <label class="radio-pill">
-                    <input type="radio" name="wyborWW" value="To-Do">
-                    <span><svg class="ico"><use href="#i-todo"/></svg>To-Do</span>
-                </label>
-            </div>
-            <button id="addWWBtn" class="btn-primary">+ Dodaj</button>
+        <div class="kat-picker" role="radiogroup" aria-label="Kategoria">
+            <label class="kat-tile" data-kat="gra">
+                <input type="radio" name="kategoria" value="gra" checked>
+                <span class="kat-tile-body">
+                    <span class="kat-ico"><svg class="ico" aria-hidden="true"><use href="#i-gamepad"/></svg></span>
+                    <span class="kat-tile-label">Gra</span>
+                </span>
+            </label>
+            <label class="kat-tile" data-kat="film">
+                <input type="radio" name="kategoria" value="film">
+                <span class="kat-tile-body">
+                    <span class="kat-ico"><svg class="ico" aria-hidden="true"><use href="#i-film"/></svg></span>
+                    <span class="kat-tile-label">Film</span>
+                </span>
+            </label>
+            <label class="kat-tile" data-kat="cosplay">
+                <input type="radio" name="kategoria" value="cosplay">
+                <span class="kat-tile-body">
+                    <span class="kat-ico"><svg class="ico" aria-hidden="true"><use href="#i-shirt"/></svg></span>
+                    <span class="kat-tile-label">Cosplay</span>
+                </span>
+            </label>
+            <label class="kat-tile" data-kat="todo">
+                <input type="radio" name="kategoria" value="todo">
+                <span class="kat-tile-body">
+                    <span class="kat-ico"><svg class="ico" aria-hidden="true"><use href="#i-todo"/></svg></span>
+                    <span class="kat-tile-label">To-Do</span>
+                </span>
+            </label>
         </div>
 
-        <div class="lists-row">
-            <div class="list-card" id="BKList">
-                <h2 class="list-title"><svg class="ico"><use href="#i-gamepad"/></svg>Bartek</h2>
-                <div id="itemsBK" class="items-container"></div>
-            </div>
-            <div class="list-card" id="WWList">
-                <h2 class="list-title"><svg class="ico"><use href="#i-flower"/></svg>Wiktoria</h2>
-                <div id="itemsWW" class="items-container"></div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- TAB: COSPY -->
-    <div id="zakladkaCospy" class="tab-content" style="display:none;">
-
-        <div class="add-panel panel">
-            <p class="panel-label">Dodaj cosplay</p>
-            <input type="text" id="inputCosplay" placeholder="Wpisz postać...">
-            <div class="radio-group">
-                <label class="radio-pill">
-                    <input type="radio" name="ktoCosplay" value="dlaMnie" checked>
-                    <span><svg class="ico"><use href="#i-heart"/></svg>Dla mnie</span>
+        <div class="dla-kogo" id="dlaKogo" hidden>
+            <span class="dla-kogo-label">Dla kogo?</span>
+            <div class="segmented" role="radiogroup" aria-label="Dla kogo">
+                <label>
+                    <input type="radio" name="dlaKogo" value="ja" checked>
+                    <span><svg class="ico" aria-hidden="true"><use href="#i-heart"/></svg>Dla mnie</span>
                 </label>
-                <label class="radio-pill">
-                    <input type="radio" name="ktoCosplay" value="prosba">
-                    <span><svg class="ico"><use href="#i-send"/></svg>Prośba</span>
+                <label>
+                    <input type="radio" name="dlaKogo" value="prosba">
+                    <span><svg class="ico" aria-hidden="true"><use href="#i-send"/></svg><span id="prosbaLabel">Prośba</span></span>
                 </label>
-            </div>
-            <button id="addCosplayBtn" class="btn-primary">+ Dodaj cosplay</button>
-        </div>
-
-        <div class="lists-row">
-            <div class="list-card" id="BKCospyList">
-                <h2 class="list-title"><svg class="ico"><use href="#i-gamepad"/></svg>Cosplaye Bartka</h2>
-                <div id="itemsBKCosplay" class="items-container"></div>
-            </div>
-            <div class="list-card" id="WWCospyList">
-                <h2 class="list-title"><svg class="ico"><use href="#i-flower"/></svg>Cosplaye Wiktorii</h2>
-                <div id="itemsWWCosplay" class="items-container"></div>
             </div>
         </div>
 
+        <form class="add-row" id="addForm" autocomplete="off">
+            <input type="text" id="nazwaInput" placeholder="Tytuł gry..." aria-label="Nazwa">
+            <button type="submit" class="btn-primary" id="addBtn">
+                <svg class="ico" aria-hidden="true"><use href="#i-plus"/></svg>
+                <span id="addBtnLabel">Dodaj grę</span>
+            </button>
+        </form>
+    </section>
+
+    <nav class="filtry" aria-label="Filtruj listy">
+        <span class="filtry-label">Pokaż:</span>
+        <button type="button" class="filtr active" data-filtr="wszystko" aria-pressed="true">
+            <svg class="ico" aria-hidden="true"><use href="#i-all"/></svg>Wszystko
+            <span class="filtr-licznik" data-licznik="wszystko">0</span>
+        </button>
+        <button type="button" class="filtr" data-filtr="gra" data-kat="gra" aria-pressed="false">
+            <svg class="ico" aria-hidden="true"><use href="#i-gamepad"/></svg>Gry
+            <span class="filtr-licznik" data-licznik="gra">0</span>
+        </button>
+        <button type="button" class="filtr" data-filtr="film" data-kat="film" aria-pressed="false">
+            <svg class="ico" aria-hidden="true"><use href="#i-film"/></svg>Filmy
+            <span class="filtr-licznik" data-licznik="film">0</span>
+        </button>
+        <button type="button" class="filtr" data-filtr="cosplay" data-kat="cosplay" aria-pressed="false">
+            <svg class="ico" aria-hidden="true"><use href="#i-shirt"/></svg>Cosplay
+            <span class="filtr-licznik" data-licznik="cosplay">0</span>
+        </button>
+        <button type="button" class="filtr" data-filtr="todo" data-kat="todo" aria-pressed="false">
+            <svg class="ico" aria-hidden="true"><use href="#i-todo"/></svg>To-Do
+            <span class="filtr-licznik" data-licznik="todo">0</span>
+        </button>
+    </nav>
+
+    <div class="lists-row">
+        <section class="card list-card" aria-labelledby="tytulBK">
+            <h2 class="list-title" id="tytulBK">
+                <span class="osoba-ico"><svg class="ico" aria-hidden="true"><use href="#i-gamepad"/></svg></span>
+                Bartek
+                <span class="licznik" id="licznikBK">0</span>
+            </h2>
+            <div id="listaBK" class="items-container"><p class="ladowanie">Ładuję…</p></div>
+        </section>
+        <section class="card list-card" aria-labelledby="tytulWW">
+            <h2 class="list-title" id="tytulWW">
+                <span class="osoba-ico"><svg class="ico" aria-hidden="true"><use href="#i-flower"/></svg></span>
+                Wiktoria
+                <span class="licznik" id="licznikWW">0</span>
+            </h2>
+            <div id="listaWW" class="items-container"><p class="ladowanie">Ładuję…</p></div>
+        </section>
     </div>
 
 </main>
