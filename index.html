@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" type="image/png" href="https://img.icons8.com/color/512/hello-kitty.png">
+    <title>Nasza lista owo</title>
+</head>
+<body>
+
+<!-- IKONY — sprite w stylu Lucide. Rysowane obrysem, więc biorą kolor
+     z currentColor i skalują się razem z tekstem. Użycie:
+     <svg class="ico"><use href="#i-gamepad"/></svg> -->
+<svg class="ikony-sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-gamepad" viewBox="0 0 24 24">
+        <line x1="6" x2="10" y1="11" y2="11"/>
+        <line x1="8" x2="8" y1="9" y2="13"/>
+        <line x1="15" x2="15.01" y1="12" y2="12"/>
+        <line x1="18" x2="18.01" y1="10" y2="10"/>
+        <path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.544-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/>
+    </symbol>
+    <symbol id="i-film" viewBox="0 0 24 24">
+        <rect width="20" height="20" x="2" y="2" rx="2.18" ry="2.18"/>
+        <line x1="7" x2="7" y1="2" y2="22"/>
+        <line x1="17" x2="17" y1="2" y2="22"/>
+        <line x1="2" x2="22" y1="12" y2="12"/>
+        <line x1="2" x2="7" y1="7" y2="7"/>
+        <line x1="2" x2="7" y1="17" y2="17"/>
+        <line x1="17" x2="22" y1="17" y2="17"/>
+        <line x1="17" x2="22" y1="7" y2="7"/>
+    </symbol>
+    <symbol id="i-shirt" viewBox="0 0 24 24">
+        <path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/>
+    </symbol>
+    <symbol id="i-todo" viewBox="0 0 24 24">
+        <path d="m3 17 2 2 4-4"/>
+        <path d="m3 7 2 2 4-4"/>
+        <path d="M13 6h8"/>
+        <path d="M13 12h8"/>
+        <path d="M13 18h8"/>
+    </symbol>
+    <symbol id="i-flower" viewBox="0 0 24 24">
+        <circle cx="12" cy="6.5" r="3.2"/>
+        <circle cx="17.5" cy="12" r="3.2"/>
+        <circle cx="12" cy="17.5" r="3.2"/>
+        <circle cx="6.5" cy="12" r="3.2"/>
+        <circle cx="12" cy="12" r="2.2"/>
+    </symbol>
+    <symbol id="i-sparkles" viewBox="0 0 24 24">
+        <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>
+        <path d="M20 3v4"/>
+        <path d="M22 5h-4"/>
+        <path d="M4 17v2"/>
+        <path d="M5 18H3"/>
+    </symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24">
+        <path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/>
+    </symbol>
+    <symbol id="i-send" viewBox="0 0 24 24">
+        <path d="m22 2-7 20-4-9-9-4Z"/>
+        <path d="M22 2 11 13"/>
+    </symbol>
+    <symbol id="i-x" viewBox="0 0 24 24">
+        <path d="M18 6 6 18"/>
+        <path d="m6 6 12 12"/>
+    </symbol>
+</svg>
+
+<!-- LOGIN MODAL -->
+<div id="modalOverlay"></div>
+<div id="modal">
+    <img class="modal-logo" src="https://www.clipartmax.com/png/full/126-1261994_hello-kitty-png-icon-hello-kitty-png-icons.png" alt="Logo">
+    <h2 class="modal-title">Nasza checklista OwO</h2>
+    <p class="modal-subtitle">Kto to ty?</p>
+    <div class="wybor">
+        <label class="wybor-label">
+            <input type="radio" name="osoba" value="BK">
+            <span class="wybor-card">
+                <svg class="ico wybor-ico"><use href="#i-gamepad"/></svg>
+                <span>Bartek</span>
+            </span>
+        </label>
+        <label class="wybor-label">
+            <input type="radio" name="osoba" value="WW">
+            <span class="wybor-card">
+                <svg class="ico wybor-ico"><use href="#i-flower"/></svg>
+                <span>Wiktoria</span>
+            </span>
+        </label>
+    </div>
+    <input type="password" id="hasloInput" placeholder="Hasło...">
+    <button id="modalBtn">Wejdź <svg class="ico"><use href="#i-sparkles"/></svg></button>
+</div>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+    <img class="navbar-logo" src="https://www.clipartmax.com/png/full/126-1261994_hello-kitty-png-icon-hello-kitty-png-icons.png" alt="Logo">
+    <h1 class="navbar-title">Nasza lista OwO</h1>
+    <div id="navButtons" class="nav-actions" style="display:none;">
+        <button id="btnGry" class="tab-btn active"><svg class="ico"><use href="#i-gamepad"/></svg>Gry/Filmy</button>
+        <button id="btnCospy" class="tab-btn"><svg class="ico"><use href="#i-shirt"/></svg>Cospy</button>
+        <button id="logoutBtn" class="logout-btn">Wyloguj</button>
+    </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main class="main-content">
+
+    <!-- TAB: GRY/FILMY -->
+    <div id="zakladkaGry" class="tab-content">
+
+        <div class="add-panel panel">
+            <p class="panel-label">Dodaj coś nowego</p>
+            <input type="text" id="inputWW" placeholder="Tytuł, postać, zadanie...">
+            <div class="radio-group">
+                <label class="radio-pill">
+                    <input type="radio" name="wyborWW" value="Gra" checked>
+                    <span><svg class="ico"><use href="#i-gamepad"/></svg>Gra</span>
+                </label>
+                <label class="radio-pill">
+                    <input type="radio" name="wyborWW" value="Do obejrzenia">
+                    <span><svg class="ico"><use href="#i-film"/></svg>Do obejrzenia</span>
+                </label>
+                <label class="radio-pill">
+                    <input type="radio" name="wyborWW" value="Cosplay">
+                    <span><svg class="ico"><use href="#i-shirt"/></svg>Cosplay</span>
+                </label>
+                <label class="radio-pill">
+                    <input type="radio" name="wyborWW" value="To-Do">
+                    <span><svg class="ico"><use href="#i-todo"/></svg>To-Do</span>
+                </label>
+            </div>
+            <button id="addWWBtn" class="btn-primary">+ Dodaj</button>
+        </div>
+
+        <div class="lists-row">
+            <div class="list-card" id="BKList">
+                <h2 class="list-title"><svg class="ico"><use href="#i-gamepad"/></svg>Bartek</h2>
+                <div id="itemsBK" class="items-container"></div>
+            </div>
+            <div class="list-card" id="WWList">
+                <h2 class="list-title"><svg class="ico"><use href="#i-flower"/></svg>Wiktoria</h2>
+                <div id="itemsWW" class="items-container"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- TAB: COSPY -->
+    <div id="zakladkaCospy" class="tab-content" style="display:none;">
+
+        <div class="add-panel panel">
+            <p class="panel-label">Dodaj cosplay</p>
+            <input type="text" id="inputCosplay" placeholder="Wpisz postać...">
+            <div class="radio-group">
+                <label class="radio-pill">
+                    <input type="radio" name="ktoCosplay" value="dlaMnie" checked>
+                    <span><svg class="ico"><use href="#i-heart"/></svg>Dla mnie</span>
+                </label>
+                <label class="radio-pill">
+                    <input type="radio" name="ktoCosplay" value="prosba">
+                    <span><svg class="ico"><use href="#i-send"/></svg>Prośba</span>
+                </label>
+            </div>
+            <button id="addCosplayBtn" class="btn-primary">+ Dodaj cosplay</button>
+        </div>
+
+        <div class="lists-row">
+            <div class="list-card" id="BKCospyList">
+                <h2 class="list-title"><svg class="ico"><use href="#i-gamepad"/></svg>Cosplaye Bartka</h2>
+                <div id="itemsBKCosplay" class="items-container"></div>
+            </div>
+            <div class="list-card" id="WWCospyList">
+                <h2 class="list-title"><svg class="ico"><use href="#i-flower"/></svg>Cosplaye Wiktorii</h2>
+                <div id="itemsWWCosplay" class="items-container"></div>
+            </div>
+        </div>
+
+    </div>
+
+</main>
+
+<script type="module" src="script.js"></script>
+</body>
+</html>
